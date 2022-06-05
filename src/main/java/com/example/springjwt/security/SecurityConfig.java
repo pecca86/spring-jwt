@@ -1,6 +1,7 @@
 package com.example.springjwt.security;
 
 import com.example.springjwt.filter.CustomAuthenticationFilter;
+import com.example.springjwt.filter.CustomAuthorizationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
@@ -40,13 +42,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                    .antMatchers("/api/login/**").permitAll()
+                    .antMatchers("/api/login/**", "/api/users/token/refresh/**").permitAll()
                     .antMatchers(GET, "/api/users").hasAuthority("ROLE_USER")
                     .antMatchers(POST, "/api/users").hasAuthority("ROLE_ADMIN")
                 .anyRequest()
                     .permitAll()
                 .and()
-                .addFilter(customAuthenticationFilter);
+                .addFilter(customAuthenticationFilter)
+                .addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class); // set this filter to come before all other filters
     }
 
     @Bean
